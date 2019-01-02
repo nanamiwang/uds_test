@@ -298,6 +298,7 @@ class UdsClient():
         messages = self.panda.can_recv()
         for rx_addr, rx_ts, rx_data, rx_bus in messages:
           if rx_bus != self.bus or rx_addr != self.rx_addr or len(rx_data) == 0:
+            # AUDI respond on bus 0x80
             if debug:
               print('rx msg, rx_bus:', rx_bus, 'rx_addr:', rx_addr, 'len:', len(rx_data))
 
@@ -414,16 +415,20 @@ class UdsClient():
         raise NegativeResponseError('{} - {}'.format(service_desc, error_desc), service_id, error_code)
       break
 
-    # positive response
-    if service_type+0x40 != resp_sid:
-      resp_sid_hex = hex(resp_sid) if resp_sid is not None else None
-      raise InvalidServiceIdError('invalid response service id: {}'.format(resp_sid_hex))
+    if debug:
+      print('Response service id', hex(resp_sid) if resp_sid is not None else None)
+    # AUDI respond with the same sid as request
+    if False:
+      # positive response
+      if service_type+0x40 != resp_sid:
+        resp_sid_hex = hex(resp_sid) if resp_sid is not None else None
+        raise InvalidServiceIdError('invalid response service id: {}'.format(resp_sid_hex))
 
-    if subfunction is not None:
-      resp_sfn = resp[1] if len(resp) > 1 else None
-      if subfunction != resp_sfn:
-        resp_sfn_hex = hex(resp_sfn) if resp_sfn is not None else None
-        raise InvalidSubFunctioneError('invalid response subfunction: {}'.format(hex(resp_sfn)))
+      if subfunction is not None:
+        resp_sfn = resp[1] if len(resp) > 1 else None
+        if subfunction != resp_sfn:
+          resp_sfn_hex = hex(resp_sfn) if resp_sfn is not None else None
+          raise InvalidSubFunctioneError('invalid response subfunction: {}'.format(hex(resp_sfn)))
 
     # return data (exclude service id and sub-function id)
     return resp[(1 if subfunction is None else 2):]
