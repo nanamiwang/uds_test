@@ -299,8 +299,7 @@ class UdsClient():
         for rx_addr, rx_ts, rx_data, rx_bus in messages:
           if rx_bus != self.bus or rx_addr != self.rx_addr or len(rx_data) == 0:
             if debug:
-              print('Drop rx msg, rx_bus:', rx_bus, 'rx_addr:', rx_addr, 'len:', len(rx_data))
-            continue
+              print('rx msg, rx_bus:', rx_bus, 'rx_addr:', rx_addr, 'len:', len(rx_data))
 
           if (debug): print("R: {} {}".format(hex(rx_addr), hexlify(rx_data)))
           if rx_data[0] >> 4 == 0x0:
