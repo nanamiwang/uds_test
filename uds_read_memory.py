@@ -7,11 +7,12 @@ import struct
 
 # The tx address of the camera
 TX_ADDRESS = 0x5A
+
 # access key
-# unsigned int format, 4 bytes.
-KEY = struct.pack('I', 20103)
-# Uncomment line below to use unsigned short format, 2 bytes.
-# KEY = struct.pack('H', 20103)
+# unsigned short format, 2 bytes.
+KEY = struct.pack('H', 20103)
+# Uncomment line below to use unsigned short format, 4 bytes.
+#KEY = struct.pack('I', 20103)
 
 
 if __name__ == "__main__":
