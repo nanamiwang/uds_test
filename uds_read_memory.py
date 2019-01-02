@@ -23,7 +23,7 @@ if __name__ == "__main__":
 		print("Connect to panda failed")
 		sys.exit(0)
 
-	uds_client = UdsClient(p, TX_ADDRESS, bus=0, timeout=10, debug=True)
+	uds_client = UdsClient(p, TX_ADDRESS, rx_addr=TX_ADDRESS, bus=0, timeout=10, debug=True)
 	# Step 1: Init diagnostic session
 	result = uds_client._uds_request(SERVICE_TYPE.DIAGNOSTIC_SESSION_CONTROL, subfunction=SESSION_TYPE.EXTENDED_DIAGNOSTIC)
 	print('Init diagnostic session return:', result)
