@@ -112,7 +112,7 @@ if __name__ == "__main__":
             if len(data) <= 4:
                 print('Invalid can frame packet:', len(data))
             addr = struct.unpack('!I', data[0:4])
-            print('Recved:', hex(addr), data[4:])
+            print('Recved:', hex(addr[0]), data[4:])
 
     def on_disconnected():
         print('Disconnected')

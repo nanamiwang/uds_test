@@ -87,7 +87,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                 if len(data) <= 4:
                                     print('Invalid can frame packet:', len(data))
                                 addr = struct.unpack('!I', data[0:4])
-                                print('Recved from client:', hex(addr), data[4:])
+                                print('Recved from client:', hex(addr[0]), data[4:])
                                 panda.can_send(addr, data[4:], CAN_BUS)
                             self.read_buf = b''
             except Exception as e:
@@ -111,4 +111,7 @@ if __name__ == "__main__":
 
     # Activate the TCP server.
     # To abort the TCP server, press Ctrl-C.
-    tcp_server.serve_forever()
+    try:
+        tcp_server.serve_forever()
+    except Exception as e:
+        print(e)
