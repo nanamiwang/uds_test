@@ -45,7 +45,7 @@ class RecvCANThd(threading.Thread):
                 self.lock.acquire()
                 if self.send_sock:
                     for rx_addr, rx_ts, rx_data, rx_bus in messages:
-                        print('Recved from panda:', hex(rx_addr), rx_data)
+                        print('Recved from panda:', hex(rx_addr), hex(rx_data))
                         self.send_packet(PACKET_TYPE_CAN_FRAME, struct.pack('!I', rx_addr) + rx_data)
                 self.lock.release()
         except Exception as e:
@@ -86,7 +86,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                 if len(data) <= 4:
                                     print('Invalid can frame packet:', len(data))
                                 addr = struct.unpack('!I', data[0:4])
-                                print('Recved from client:', hex(addr[0]), data[4:])
+                                print('Recved from client:', hex(addr[0]), hex(data[4:]))
                                 panda.can_send(addr[0], data[4:], CAN_BUS)
                             self.read_buf = b''
             except Exception as e:
