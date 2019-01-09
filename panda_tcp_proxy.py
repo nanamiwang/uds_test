@@ -94,6 +94,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                 break
         recv_can_thd.set_send_sock(None)
 
+
 if __name__ == "__main__":
     panda = Panda()
     # allow all output
@@ -105,7 +106,7 @@ if __name__ == "__main__":
 
     recv_can_thd = RecvCANThd()
     recv_can_thd.start()
-    HOST, PORT = "localhost", 9999
+    HOST, PORT = "0.0.0.0", 9999
     tcp_server = SocketServer.TCPServer((HOST, PORT), TcpServerHandler)
 
     # Activate the TCP server.
