@@ -86,6 +86,9 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                 if len(data) <= 4:
                                     print('Invalid can frame packet:', len(data))
                                 addr = struct.unpack('!I', data[0:4])
+                                if len(addr) == 0:
+                                    print('Invalid can frame packet data:', data)
+                                    break
                                 print('Recved from client:', hex(addr[0]), hex(data[4:]))
                                 panda.can_send(addr[0], data[4:], CAN_BUS)
                             self.read_buf = b''
