@@ -36,9 +36,7 @@ class RecvCANThd(threading.Thread):
     def send_packet(self, msg_type, packet_data):
         packet_data_len = len(packet_data)
         pkt = struct.pack('>HH', SIZEOF_PACKET_HEADER + packet_data_len, msg_type) + packet_data
-        self.lock.acquire()
         self.send_all(pkt)
-        self.lock.release()
 
     def run(self):
         try:

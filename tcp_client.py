@@ -72,6 +72,7 @@ class Connection:
             recved = self.sock.recv(required_len)
             if not recved:
                 on_peer_shutdown()
+                self.send_thd.stop()
             else:
                 self.read_buf += recved
                 header = struct.unpack('>HH', self.read_buf[0:SIZEOF_PACKET_HEADER])
