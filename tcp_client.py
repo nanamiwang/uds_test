@@ -114,8 +114,11 @@ if __name__ == "__main__":
             addr = struct.unpack('!I', data[0:4])
             print('Recved:', hex(addr), data[4:])
 
+    def on_disconnected():
+        print('Disconnected')
+
     try:
         while True:
-            conn.receive_packet(on_packet_recved, lambda: print('Disconnected'))
+            conn.receive_packet(on_packet_recved, on_disconnected)
     except Exception as e:
         print(e)
