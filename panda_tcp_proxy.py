@@ -61,6 +61,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         self.read_buf = b''
         self.request.setblocking(0)
+        recv_can_thd.set_send_sock(self.request)
         while True:
             try:
                 readables, _, _ = select([self.request], [], [], 0.5)
@@ -93,7 +94,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
             except Exception as e:
                 print(e)
                 break
-
+        recv_can_thd.set_send_sock(None)
 
 if __name__ == "__main__":
     panda = Panda()
