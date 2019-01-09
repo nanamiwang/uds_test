@@ -5,6 +5,7 @@ from select import select
 import threading
 from constants import *
 from panda import Panda
+from binascii import hexlify
 
 CAN_BUS = 0x0
 
@@ -45,7 +46,7 @@ class RecvCANThd(threading.Thread):
                 self.lock.acquire()
                 if self.send_sock:
                     for rx_addr, rx_ts, rx_data, rx_bus in messages:
-                        print('Recved from panda:', hex(rx_addr), hex(rx_data))
+                        print('Recved from panda:', hex(rx_addr), hexlify(rx_data))
                         self.send_packet(PACKET_TYPE_CAN_FRAME, struct.pack('!I', rx_addr) + rx_data)
                 self.lock.release()
         except Exception as e:
@@ -80,7 +81,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                         header = struct.unpack('>HH', self.read_buf[0:SIZEOF_PACKET_HEADER])
                         payload_length = header[0] - SIZEOF_PACKET_HEADER
                         if SIZEOF_PACKET_HEADER + payload_length == len(self.read_buf):
-                            print('Recved packet:', hex(self.read_buf))
+                            print('Recved packet:', hexlify(self.read_buf))
                             # tuple: (packet type, packet payload)
                             if header[1] == PACKET_TYPE_CAN_FRAME:
                                 data = self.read_buf[SIZEOF_PACKET_HEADER:]
@@ -88,9 +89,9 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                     print('Invalid can frame packet:', len(data))
                                 addr = struct.unpack('!I', data[0:4])
                                 if len(addr) == 0:
-                                    print('Invalid can frame packet data:', hex(data))
+                                    print('Invalid can frame packet data:', hexlify(data))
                                     break
-                                print('Recved from client:', hex(addr[0]), hex(data[4:]))
+                                print('Recved from client:', hex(addr[0]), hexlify(data[4:]))
                                 panda.can_send(addr[0], data[4:], CAN_BUS)
                             self.read_buf = b''
             except Exception as e:
