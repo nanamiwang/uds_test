@@ -16,9 +16,9 @@ class RecvCANThd(threading.Thread):
         self.send_sock = None
 
     def set_send_sock(self, s):
-        self.send_lock.acquire()
+        self.lock.acquire()
         self.send_sock = s
-        self.send_lock.release()
+        self.lock.release()
 
     def stop(self):
         self._stop_event.set()
@@ -36,9 +36,9 @@ class RecvCANThd(threading.Thread):
     def send_packet(self, msg_type, packet_data):
         packet_data_len = len(packet_data)
         pkt = struct.pack('>HH', SIZEOF_PACKET_HEADER + packet_data_len, msg_type) + packet_data
-        self.send_lock.acquire()
+        self.lock.acquire()
         self.send_all(pkt)
-        self.send_lock.release()
+        self.lock.release()
 
     def run(self):
         try:
