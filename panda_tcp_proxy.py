@@ -9,7 +9,7 @@ from panda import Panda
 CAN_BUS = 0x0
 
 class RecvCANThd(threading.Thread):
-    def __init__(self, p):
+    def __init__(self):
         super(RecvCANThd, self).__init__()
         self._stop_event = threading.Event()
         self.lock = threading.Lock()
