@@ -1,6 +1,6 @@
 from __future__ import print_function
 import struct
-import socketserver
+import SocketServer
 from select import select
 import threading
 from constants import *
@@ -56,7 +56,7 @@ class RecvCANThd(threading.Thread):
             pass
 
 
-class TcpServerHandler(socketserver.BaseRequestHandler):
+class TcpServerHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         self.read_buf = b''
         self.request.setblocking(0)
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     recv_can_thd = RecvCANThd()
     recv_can_thd.start()
     HOST, PORT = "localhost", 9999
-    tcp_server = socketserver.TCPServer((HOST, PORT), TcpServerHandler)
+    tcp_server = SocketServer.TCPServer((HOST, PORT), TcpServerHandler)
 
     # Activate the TCP server.
     # To abort the TCP server, press Ctrl-C.
