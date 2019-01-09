@@ -24,7 +24,7 @@ class SendCANThd(threading.Thread):
     def run(self):
         try:
             while not self.stopped():
-                self._conn.send_packet(PACKET_TYPE_CAN_FRAME, b'12345678')
+                self._conn.send_frame(PACKET_TYPE_CAN_FRAME, 0x7ef, b'12345678')
                 time.sleep(1)
         except Exception as e:
             print(e)
@@ -96,18 +96,26 @@ class Connection:
         t = struct.unpack('>H{}B'.format(frame_payload_len), payload)
         return t[0], t[1:]
 
-    def send_frame(self, frame_id, payload):
+    def send_frame(self, addr, payload):
         if len(payload) == 0:
             return 0
-        self.send_packet(PACKET_TYPE_CAN_FRAME, payload)
-        return len(payload)
+        print('Send:', hex(addr), payload)
+        self.send_packet(PACKET_TYPE_CAN_FRAME, struct.pack('!I', addr) + payload)
 
 
 if __name__ == "__main__":
     conn = Connection()
     conn.connect()
+
+    def on_packet_recved(t, data):
+        if t == PACKET_TYPE_CAN_FRAME:
+            if len(data) <= 4:
+                print('Invalid can frame packet:', len(data))
+            addr = struct.unpack('!I', data[0:4])
+            print('Recved:', hex(addr), data[4:])
+
     try:
         while True:
-            conn.receive_packet(lambda t, d: print(t, d), lambda: print('Disconnected'))
+            conn.receive_packet(on_packet_recved, lambda: print('Disconnected'))
     except Exception as e:
         print(e)
