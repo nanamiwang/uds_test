@@ -24,7 +24,7 @@ class SendCANThd(threading.Thread):
     def run(self):
         try:
             while not self.stopped():
-                self._conn.send_frame(PACKET_TYPE_CAN_FRAME, 0x7ef, b'12345678')
+                self._conn.send_frame(0x7ef, b'12345678')
                 time.sleep(1)
         except Exception as e:
             print(e)
