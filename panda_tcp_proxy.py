@@ -80,6 +80,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                         header = struct.unpack('>HH', self.read_buf[0:SIZEOF_PACKET_HEADER])
                         payload_length = header[0] - SIZEOF_PACKET_HEADER
                         if SIZEOF_PACKET_HEADER + payload_length == len(self.read_buf):
+                            print('Recved packet:', hex(self.read_buf))
                             # tuple: (packet type, packet payload)
                             if header[1] == PACKET_TYPE_CAN_FRAME:
                                 data = self.read_buf[SIZEOF_PACKET_HEADER:]
@@ -87,7 +88,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                     print('Invalid can frame packet:', len(data))
                                 addr = struct.unpack('!I', data[0:4])
                                 if len(addr) == 0:
-                                    print('Invalid can frame packet data:', data)
+                                    print('Invalid can frame packet data:', hex(data))
                                     break
                                 print('Recved from client:', hex(addr[0]), hex(data[4:]))
                                 panda.can_send(addr[0], data[4:], CAN_BUS)
