@@ -1,6 +1,7 @@
 from __future__ import print_function
 import struct
 import SocketServer
+from time import sleep
 from select import select
 import threading
 from constants import *
@@ -102,8 +103,9 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                     print('Invalid can frame packet data:', hexlify(data))
                                     break
                                 print('Recved CAN frame from client:', hex(addr[0]), hexlify(data[4:]))
-                                #self.auto_reply(data)
-                                panda.can_send(addr[0], data[4:], CAN_BUS)
+                                can_addr = addr[0]
+                                panda.can_send(can_addr, data[4:], CAN_BUS)
+                                self.auto_reply(data)
                             read_buf = b''
         except Exception as e:
             print(e)
@@ -112,11 +114,8 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
             recv_can_thd.remove_send_sock(self.request)
 
     AUTO_REPLAY_LIST = {
-        b'00000700023E805555555555': [b'00000700023E805555555555'],
-        b'000007E0023E005555555555': [b'000007E0023E005555555555'],
-        b'000007E00322F19E55555555': [b'000007E00322F19E55555555'],
-        b'000007E03000005555555555': [b'000007E03000005555555555']
-
+        b'0000074F023E005555555555': [b'0000074F023E005555555555', b'000007B9027E000000000000'],
+        b'00000700023E805555555555': [b'00000700023E805555555555', b'0000077E027E00AAAAAAAAAA'],
     }
     def auto_reply(self, data):
         recv_can_thd.lock.acquire()
@@ -124,6 +123,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
         if a:
             print('Auto reply', hexlify(data))
             for r in a:
+                sleep(1)
                 recv_can_thd.send_can_frame_to_clients(unhexlify(r))
         recv_can_thd.lock.release()
 
@@ -135,6 +135,7 @@ class ServerThd(threading.Thread):
     def run(self):
         print('Listening...')
         self._server.serve_forever()
+
 
 if __name__ == "__main__":
     panda = Panda()
@@ -149,12 +150,16 @@ if __name__ == "__main__":
     recv_can_thd.start()
     HOST, PORT = "0.0.0.0", 9999
     tcp_server = SocketServer.TCPServer((HOST, PORT), TcpServerHandler)
-    ServerThd(tcp_server).start()
-    while True:
-        text = raw_input("Press q to exit\n")
-        if text == 'q':
-            break
-    tcp_server.shutdown()
-    print('Exiting...')
-    recv_can_thd.stop()
-    recv_can_thd.join()
+    try:
+        ServerThd(tcp_server).start()
+        while True:
+            text = raw_input("Press q to exit\n")
+            if text == 'q':
+                break
+    except Exception as e:
+        print(e)
+    finally:
+        tcp_server.shutdown()
+        print('Exiting...')
+        recv_can_thd.stop()
+        recv_can_thd.join()
