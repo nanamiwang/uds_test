@@ -118,6 +118,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
         recv_can_thd.lock.acquire()
         r = self.AUTO_REPLAY_LIST.get(data)
         if r:
+            print('Auto reply', hexlify(data))
             recv_can_thd.send_can_frame_to_clients(r)
         recv_can_thd.lock.release()
 
