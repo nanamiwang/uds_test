@@ -80,6 +80,8 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                         break
                     else:
                         self.read_buf += recved
+                        if header[0] < SIZEOF_PACKET_HEADER:
+                            continue
                         header = struct.unpack('!HH', self.read_buf[0:SIZEOF_PACKET_HEADER])
                         if header[0] == len(self.read_buf):
                             print('Recved packet:', hexlify(self.read_buf))
