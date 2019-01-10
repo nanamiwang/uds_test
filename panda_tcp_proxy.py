@@ -106,6 +106,7 @@ class ServerThd(threading.Thread):
         self._server = server
 
     def run(self):
+        print('Listening...')
         self._server.serve_forever()
 
 if __name__ == "__main__":
@@ -125,5 +126,6 @@ if __name__ == "__main__":
     while True:
         text = raw_input("Press q to exit")
         if text == 'q':
+            print('Exiting...')
             break
     tcp_server.shutdown()
