@@ -14,11 +14,16 @@ class RecvCANThd(threading.Thread):
         super(RecvCANThd, self).__init__()
         self._stop_event = threading.Event()
         self.lock = threading.Lock()
-        self.send_sock = None
+        self.send_sock_list = []
 
-    def set_send_sock(self, s):
+    def add_send_sock(self, s):
         self.lock.acquire()
-        self.send_sock = s
+        self.send_sock_list.append(s)
+        self.lock.release()
+
+    def remove_send_sock(self, s):
+        self.lock.acquire()
+        self.send_sock_list.remove(s)
         self.lock.release()
 
     def stop(self):
@@ -27,27 +32,27 @@ class RecvCANThd(threading.Thread):
     def stopped(self):
         return self._stop_event.is_set()
 
-    def send_all(self, data):
+    def send_all(self, sock, data):
         amount_sent = 0
         while amount_sent < len(data):
-            _, writables, _ = select([], [self.send_sock], [], 1)
+            _, writables, _ = select([], [sock], [], 1)
             if len(writables) > 0:
-                amount_sent += self.send_sock.send(data[amount_sent:])
+                amount_sent += sock.send(data[amount_sent:])
 
-    def send_packet(self, msg_type, packet_data):
+    def send_packet(self, sock, msg_type, packet_data):
         packet_data_len = len(packet_data)
         pkt = struct.pack('!HH', SIZEOF_PACKET_HEADER + packet_data_len, msg_type) + packet_data
-        self.send_all(pkt)
+        self.send_all(sock, pkt)
 
     def run(self):
         try:
             while not self.stopped():
                 messages = panda.can_recv()
                 self.lock.acquire()
-                if self.send_sock:
+                for sock in self.send_sock_list:
                     for rx_addr, rx_ts, rx_data, rx_bus in messages:
                         #print('Recved from panda:', hex(rx_addr), hexlify(rx_data))
-                        self.send_packet(PACKET_TYPE_CAN_FRAME, struct.pack('!I', rx_addr) + rx_data)
+                        self.send_packet(sock, PACKET_TYPE_CAN_FRAME, struct.pack('!I', rx_addr) + rx_data)
                 self.lock.release()
         except Exception as e:
             print(e)
@@ -58,10 +63,10 @@ class RecvCANThd(threading.Thread):
 
 class TcpServerHandler(SocketServer.BaseRequestHandler):
     def handle(self):
-        print('Client connnected')
+        print('Client connnected', self.request)
         read_buf = b''
         self.request.setblocking(0)
-        recv_can_thd.set_send_sock(self.request)
+        recv_can_thd.add_send_sock(self.request)
         try:
             while True:
                 readables, _, _ = select([self.request], [], [], 0.5)
@@ -100,8 +105,8 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
         except Exception as e:
             print(e)
         finally:
-            print('Client disconnected')
-            recv_can_thd.set_send_sock(None)
+            print('Client disconnected', self.request)
+            recv_can_thd.remove_send_sock(self.request)
 
 
 class ServerThd(threading.Thread):
