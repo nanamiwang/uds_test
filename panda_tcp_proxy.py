@@ -100,6 +100,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
         except Exception as e:
             print(e)
         finally:
+            print('Client disconnected')
             recv_can_thd.set_send_sock(None)
 
 
