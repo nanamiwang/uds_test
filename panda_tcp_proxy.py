@@ -121,6 +121,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
     def auto_reply(self, data):
         recv_can_thd.lock.acquire()
         print(hexlify(data), type(hexlify(data)), len(hexlify(data)))
+        [print(x, type(x), len(x)) for x in self.AUTO_REPLAY_LIST.keys()]
         a = self.AUTO_REPLAY_LIST.get(hexlify(data))
         if a:
             print('Auto reply', hexlify(data))
