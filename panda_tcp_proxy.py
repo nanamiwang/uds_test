@@ -126,6 +126,8 @@ if __name__ == "__main__":
     while True:
         text = raw_input("Press q to exit")
         if text == 'q':
-            print('Exiting...')
             break
     tcp_server.shutdown()
+    print('Exiting...')
+    recv_can_thd.stop()
+    recv_can_thd.join()
