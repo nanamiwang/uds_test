@@ -5,7 +5,7 @@ from select import select
 import threading
 from constants import *
 from panda import Panda
-from binascii import hexlify
+from binascii import hexlify, unhexlify
 
 CAN_BUS = 0x0
 
@@ -112,14 +112,19 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
             recv_can_thd.remove_send_sock(self.request)
 
     AUTO_REPLAY_LIST = {
-        b'00000700023E805555555555' : b'00000700023E805555555555'
+        '00000700023E805555555555': ['00000700023E805555555555'],
+        '000007E0023E005555555555': ['000007E0023E005555555555', '000007E8027E000000000000'],
+        '000007E00322F19E55555555': ['000007E00322F19E55555555', '000007E8037F227800000000', '000007E8101C62F19E45565F'],
+        '000007E03000005555555555': ['000007E03000005555555555']
+
     }
     def auto_reply(self, data):
         recv_can_thd.lock.acquire()
-        r = self.AUTO_REPLAY_LIST.get(data)
-        if r:
+        a = self.AUTO_REPLAY_LIST.get(data)
+        if a:
             print('Auto reply', hexlify(data))
-            recv_can_thd.send_can_frame_to_clients(r)
+            for r in a:
+                recv_can_thd.send_can_frame_to_clients(unhexlify(r))
         recv_can_thd.lock.release()
 
 class ServerThd(threading.Thread):
