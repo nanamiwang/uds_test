@@ -59,35 +59,35 @@ class RecvCANThd(threading.Thread):
 class TcpServerHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         print('Client connnected')
-        self.read_buf = b''
+        read_buf = b''
         self.request.setblocking(0)
         recv_can_thd.set_send_sock(self.request)
-        while True:
-            try:
+        try:
+            while True:
                 readables, _, _ = select([self.request], [], [], 0.5)
                 if len(readables) > 0:
-                    if len(self.read_buf) < SIZEOF_PACKET_HEADER:
-                        required_len = SIZEOF_PACKET_HEADER - len(self.read_buf)
+                    if len(read_buf) < SIZEOF_PACKET_HEADER:
+                        required_len = SIZEOF_PACKET_HEADER - len(read_buf)
                     else:
-                        header = struct.unpack('!HH', self.read_buf[0:SIZEOF_PACKET_HEADER])
-                        print("header len:", header[0], 'type:', header[1])
+                        header = struct.unpack('!HH', read_buf[0:SIZEOF_PACKET_HEADER])
+                        print("total len:", header[0], 'type:', header[1])
                         if header[0] < SIZEOF_PACKET_HEADER:
                             raise RuntimeError("Invalid packet length: {}".format(header[0]))
-                        required_len = header[0] - len(self.read_buf)
+                        required_len = header[0] - len(read_buf)
                     recved = self.request.recv(required_len)
                     if not recved:
                         print("Client send FIN")
                         break
                     else:
-                        self.read_buf += recved
-                        if len(self.read_buf) < SIZEOF_PACKET_HEADER:
+                        read_buf += recved
+                        if len(read_buf) < SIZEOF_PACKET_HEADER:
                             continue
-                        header = struct.unpack('!HH', self.read_buf[0:SIZEOF_PACKET_HEADER])
-                        if header[0] == len(self.read_buf):
-                            print('Recved packet:', hexlify(self.read_buf))
+                        header = struct.unpack('!HH', read_buf[0:SIZEOF_PACKET_HEADER])
+                        if header[0] == len(read_buf):
+                            print('Recved packet, len: {}:{}'.format(header[0]), hexlify(read_buf))
                             # tuple: (packet type, packet payload)
                             if header[1] == PACKET_TYPE_CAN_FRAME:
-                                data = self.read_buf[SIZEOF_PACKET_HEADER:]
+                                data = read_buf[SIZEOF_PACKET_HEADER:]
                                 if len(data) <= 4:
                                     print('Invalid can frame packet:', len(data))
                                 addr = struct.unpack('!I', data[0:4])
@@ -96,11 +96,11 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                     break
                                 print('Recved CAN frame from client:', hex(addr[0]), hexlify(data[4:]))
                                 panda.can_send(addr[0], data[4:], CAN_BUS)
-                            self.read_buf = b''
-            except Exception as e:
-                print(e)
-                break
-        recv_can_thd.set_send_sock(None)
+                            read_buf = b''
+        except Exception as e:
+            print(e)
+        finally:
+            recv_can_thd.set_send_sock(None)
 
 
 class ServerThd(threading.Thread):
