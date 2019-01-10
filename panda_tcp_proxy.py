@@ -127,7 +127,7 @@ if __name__ == "__main__":
     tcp_server = SocketServer.TCPServer((HOST, PORT), TcpServerHandler)
     ServerThd(tcp_server).start()
     while True:
-        text = raw_input("Press q to exit")
+        text = raw_input("Press q to exit\n")
         if text == 'q':
             break
     tcp_server.shutdown()
