@@ -58,6 +58,7 @@ class RecvCANThd(threading.Thread):
 
 class TcpServerHandler(SocketServer.BaseRequestHandler):
     def handle(self):
+        print('Client connnected')
         self.read_buf = b''
         self.request.setblocking(0)
         recv_can_thd.set_send_sock(self.request)
