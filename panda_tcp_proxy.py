@@ -77,7 +77,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                         required_len = SIZEOF_PACKET_HEADER - len(read_buf)
                     else:
                         header = struct.unpack('!HH', read_buf[0:SIZEOF_PACKET_HEADER])
-                        print("total len:", header[0], 'type:', header[1])
+                        #print("total len:", header[0], 'type:', header[1])
                         if header[0] < SIZEOF_PACKET_HEADER:
                             raise RuntimeError("Invalid packet length: {}".format(header[0]))
                         required_len = header[0] - len(read_buf)
@@ -91,7 +91,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                             continue
                         header = struct.unpack('!HH', read_buf[0:SIZEOF_PACKET_HEADER])
                         if header[0] == len(read_buf):
-                            print('Recved packet, len:', header[0], hexlify(read_buf))
+                            #print('Recved packet, len:', header[0], hexlify(read_buf))
                             # tuple: (packet type, packet payload)
                             if header[1] == PACKET_TYPE_CAN_FRAME:
                                 data = read_buf[SIZEOF_PACKET_HEADER:]
@@ -102,7 +102,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                     print('Invalid can frame packet data:', hexlify(data))
                                     break
                                 print('Recved CAN frame from client:', hex(addr[0]), hexlify(data[4:]))
-                                self.auto_reply(data)
+                                #self.auto_reply(data)
                                 panda.can_send(addr[0], data[4:], CAN_BUS)
                             read_buf = b''
         except Exception as e:
@@ -113,8 +113,8 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
 
     AUTO_REPLAY_LIST = {
         b'00000700023E805555555555': [b'00000700023E805555555555'],
-        b'000007E0023E005555555555': [b'000007E0023E005555555555', b'000007E8027E000000000000'],
-        b'000007E00322F19E55555555': [b'000007E00322F19E55555555', b'000007E8037F227800000000', b'000007E8101C62F19E45565F'],
+        b'000007E0023E005555555555': [b'000007E0023E005555555555'],
+        b'000007E00322F19E55555555': [b'000007E00322F19E55555555'],
         b'000007E03000005555555555': [b'000007E03000005555555555']
 
     }
