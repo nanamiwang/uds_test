@@ -84,7 +84,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                             continue
                         header = struct.unpack('!HH', read_buf[0:SIZEOF_PACKET_HEADER])
                         if header[0] == len(read_buf):
-                            print('Recved packet, len: {}:{}'.format(header[0]), hexlify(read_buf))
+                            print('Recved packet, len:', header[0], hexlify(read_buf))
                             # tuple: (packet type, packet payload)
                             if header[1] == PACKET_TYPE_CAN_FRAME:
                                 data = read_buf[SIZEOF_PACKET_HEADER:]
