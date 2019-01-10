@@ -75,6 +75,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                         required_len = SIZEOF_PACKET_HEADER + payload_length - len(self.read_buf)
                     recved = self.request.recv(required_len)
                     if not recved:
+                        print("Client send FIN")
                         break
                     else:
                         self.read_buf += recved
