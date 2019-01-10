@@ -44,15 +44,17 @@ class RecvCANThd(threading.Thread):
         pkt = struct.pack('!HH', SIZEOF_PACKET_HEADER + packet_data_len, msg_type) + packet_data
         self.send_all(sock, pkt)
 
+    def send_can_frame_to_clients(self, data):
+        for sock in self.send_sock_list:
+            self.send_packet(sock, PACKET_TYPE_CAN_FRAME, data)
+
     def run(self):
         try:
             while not self.stopped():
                 messages = panda.can_recv()
                 self.lock.acquire()
-                for sock in self.send_sock_list:
-                    for rx_addr, rx_ts, rx_data, rx_bus in messages:
-                        #print('Recved from panda:', hex(rx_addr), hexlify(rx_data))
-                        self.send_packet(sock, PACKET_TYPE_CAN_FRAME, struct.pack('!I', rx_addr) + rx_data)
+                for rx_addr, rx_ts, rx_data, rx_bus in messages:
+                    self.send_can_frame_to_clients(struct.pack('!I', rx_addr) + rx_data)
                 self.lock.release()
         except Exception as e:
             print(e)
@@ -100,6 +102,7 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
                                     print('Invalid can frame packet data:', hexlify(data))
                                     break
                                 print('Recved CAN frame from client:', hex(addr[0]), hexlify(data[4:]))
+                                self.auto_reply(data)
                                 panda.can_send(addr[0], data[4:], CAN_BUS)
                             read_buf = b''
         except Exception as e:
@@ -108,6 +111,15 @@ class TcpServerHandler(SocketServer.BaseRequestHandler):
             print('Client disconnected', self.request)
             recv_can_thd.remove_send_sock(self.request)
 
+    AUTO_REPLAY_LIST = {
+        b'00000700023E805555555555' : b'00000700023E805555555555'
+    }
+    def auto_reply(self, data):
+        recv_can_thd.lock.acquire()
+        r = self.AUTO_REPLAY_LIST.get(data)
+        if r:
+            recv_can_thd.send_can_frame_to_clients(r)
+        recv_can_thd.lock.release()
 
 class ServerThd(threading.Thread):
     def __init__(self, server):
