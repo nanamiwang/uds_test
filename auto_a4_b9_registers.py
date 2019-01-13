@@ -1,3 +1,5 @@
+import yaml
+
 ERAY_PRTC1 = 0x084C000A
 ERAY_PRTC2 = 0x3CB41212
 ERAY_MHDC = 0x003F0006
@@ -15,6 +17,8 @@ ERAY_GTUC10 = 0x00D20032
 ERAY_SUCC2 = 0x0F0272E2
 ERAY_SUCC3 = 0x000000EA
 ERAY_NEMC = 0x00000008
+ERAY_WRHS1 = 0x35000003
+
 
 cClockDeviationMax = 0.0015
 
@@ -25,12 +29,11 @@ def extract_bits(val, highest, lowest):
 def decode_flexray_config():
     config = dict({
         'nStar': 0,
-        'LineLength': 24,
-        'pdBDTx': 0.1,
-        'pdBDRx': 0.1,
+        'LineLength': 12,
+        'pdBDTx': 0.0,
+        'pdBDRx': 0.0,
         'pdStarDelay': 0.25,
         'gdMinPropagationDelay': 0.0,
-        'pKeySlotId': 0,
         'pKeySlotOnlyEnabled': 0,
         'pPayloadLengthDynMax': 127,
         'CLOCK_SRC': 0,
@@ -85,16 +88,16 @@ def decode_flexray_config():
                 'CCF_MASK': 0,          # Cycle counter filter mask
             },
         ],
-        'TxMsgBufs': [                  # Transmit frames configuration
+        'TxMsgBufs': [  # Transmit frames configuration
             {
-                'FrameId': 1,           # The id of the slot which frame will be send on
-                'PayloadLenMax': 8,     # Max payload length in words, for dynamic slot and DynPayloadLen=1 only
-                'Channels': 1,          # The channel which frame will be send to
-                'CCF_EN': 0,            # Cycle counter filter enabled
-                'CCF_VAL': 0,           # Cycle counter filter value
-                'CCF_MASK': 0,          # Cycle counter filter mask
-                'DynPayloadLen': 0,     # Dynamic payload length enabled, for dynamic slot only
-                'PPI': 0,               # Payload preempt flag
+                'FrameId': 3,  # The id of the slot which frame will be send on
+                'PayloadLenMax': 8,  # Max payload length in words, for dynamic slot and DynPayloadLen=1 only
+                'Channels': 1,  # The channel which frame will be send to
+                'CCF_EN': 0,  # Cycle counter filter enabled
+                'CCF_VAL': 0,  # Cycle counter filter value
+                'CCF_MASK': 0,  # Cycle counter filter mask
+                'DynPayloadLen': 0,  # Dynamic payload length enabled, for dynamic slot only
+                'PPI': 0,  # Payload preempt flag
             },
         ]
     })
@@ -109,9 +112,9 @@ def decode_flexray_config():
     config['pWakeupPattern'] = extract_bits(ERAY_PRTC1, 31, 26)
 
     config['gdWakeupSymbolRxIdle'] = extract_bits(ERAY_PRTC2, 5, 0)
-    config['gdWakeupSymbolRxLow'] = extract_bits(ERAY_PRTC1, 13, 8)
-    config['gdWakeupSymbolTxIdle'] = extract_bits(ERAY_PRTC1, 23, 16)
-    config['gdWakeupSymbolTxActive'] = extract_bits(ERAY_PRTC1, 29, 24)
+    config['gdWakeupSymbolRxLow'] = extract_bits(ERAY_PRTC2, 13, 8)
+    config['gdWakeupSymbolTxIdle'] = extract_bits(ERAY_PRTC2, 23, 16)
+    config['gdWakeupSymbolTxActive'] = extract_bits(ERAY_PRTC2, 29, 24)
 
     config['gPayloadLengthStatic'] = extract_bits(ERAY_MHDC, 6, 0)
     config['pLatestTx'] = extract_bits(ERAY_MHDC, 28, 16)
@@ -175,6 +178,8 @@ def decode_flexray_config():
 
     config['gNetworkManagementVectorLength'] = extract_bits(ERAY_NEMC, 3, 0)
 
+    config['pKeySlotId'] = extract_bits(ERAY_WRHS1, 10, 0)
+
     if (config['gdActionPointOffset'] <= config['gdMiniSlotActionPointOffset'] or config['gNumberOfMinislots'] == 0):
         adActionPointDifference = 0
     else:
@@ -194,139 +199,8 @@ def decode_flexray_config():
 
 
 if __name__ == "__main__":
-    default_fr_config = {
-        # Network topology parameters, use naming convention in FLexRay spec
-        'nStar': 0,
-        'LineLength': 24,
-        'pdBDTx': 0.1,
-        'pdBDRx': 0.1,
-        'pdStarDelay': 0.25,
-        # Cluster parameters, use naming convention in FLexRay spec
-        'gdMinPropagationDelay': 0.0,
-        'gdMaxInitializationError': 0.5,
-        'gOffsetCorrectionMax': 12.0,
-        'gdMacrotick': 2,
-        'gPayloadLengthStatic': 8,
-        'gNumberOfStaticSlots': 60,
-        'gdStaticSlot': 26,
-        'gdActionPointOffset': 6,
-        'gNumberOfMinislots': 163,
-        'gdMinislot': 6,
-        'gdMiniSlotActionPointOffset': 3,
-        'gdSymbolWindow': 16,
-        'gdNIT': 103,
-        'gOffsetCorrectionStart': 2558,
-        'gdWakeupRxWindow': 301,
-        'gColdStartAttempts': 10,
-        'gListenNoise': 2,
-        'gMaxWithoutClockCorrectionFatal': 14,
-        'gMaxWithoutClockCorrectionPassive': 10,
-        'gNetworkManagementVectorLength': 2,
-        'gSyncFrameIDCountMax': 5,
-        'gdCasRxLowMax': 91,
-        'gdDynamicSlotIdlePhase': 1,
-        'gdTSSTransmitter': 11,
-        'gdWakeupSymbolRxIdle': 59,
-        'gdWakeupSymbolRxLow': 55,
-        'gdWakeupSymbolTxActive': 60,
-        'gdWakeupSymbolTxIdle': 180,
-        # Node parameters, use naming convention in FLexRay spec
-        'pChannels': 0,
-        'pWakeupChannel': 0,
-        'pWakeupPattern': 63,
-        'pPayloadLengthDynMax': 8,
-        'pMicroPerCycle': 212800,
-        'pdListenTimeout': 426880,
-        'pRateCorrectionOut': 640,
-        'pKeySlotId': 1,
-        'pKeySlotOnlyEnabled': 0,
-        'pKeySlotUsedForStartup': 1,
-        'pKeySlotUsedForSync': 1,
-        'pLatestTx': 157,
-        'pOffsetCorrectionOut': 640,
-        'pdAcceptedStartupRange': 110,
-        'pAllowPassiveToActive': 0,
-        'pClusterDriftDamping': 1,
-        'pDecodingCorrection': 56,
-        'pDelayCompensationA': 0,
-        'pDelayCompensationB': 0,
-        'pMacroInitialOffsetA': 7,
-        'pMacroInitialOffsetB': 7,
-        'pMicroInitialOffsetA': 24,
-        'pMicroInitialOffsetB': 24,
-        'pAllowHaltDueToClock': 1,
-        'CLOCK_SRC': 0,  # Protocol engine clock source
-        'BIT_RATE': 0,  # Bit rate
-        'SCM_EN': 0,  # Single channel mode enabled
-        'LOG_STATUS_DATA': 1,  # Log protocol status data defined in FlexRay spec 9.3.1.3
-        'FIFOA_EN': 0,  # Receive FIFO for channel A enabled
-        'FIFOA_Depth': 0,
-        'FIFOA_MIAFV': 0,
-        'FIFOA_MIAFM': 0,
-        'FIFOA_F0_EN': 0,
-        'FIFOA_F0_MODE': 0,
-        'FIFOA_F0_SID_LOWER': 0,
-        'FIFOA_F0_SID_UPPER': 0,
-        'FIFOA_F1_EN': 0,
-        'FIFOA_F1_MODE': 0,
-        'FIFOA_F1_SID_LOWER': 0,
-        'FIFOA_F1_SID_UPPER': 0,
-        'FIFOA_F2_EN': 0,
-        'FIFOA_F2_MODE': 0,
-        'FIFOA_F2_SID_LOWER': 0,
-        'FIFOA_F2_SID_UPPER': 0,
-        'FIFOA_F3_EN': 0,
-        'FIFOA_F3_MODE': 0,
-        'FIFOA_F3_SID_LOWER': 0,
-        'FIFOA_F3_SID_UPPER': 0,
-        'FIFOB_EN': 0,  # Receive FIFO for channel B enabled
-        'FIFOB_Depth': 0,
-        'FIFOB_MIAFV': 0,
-        'FIFOB_MIAFM': 0,
-        'FIFOB_F0_EN': 0,
-        'FIFOB_F0_MODE': 0,
-        'FIFOB_F0_SID_LOWER': 0,
-        'FIFOB_F0_SID_UPPER': 0,
-        'FIFOB_F1_EN': 0,
-        'FIFOB_F1_MODE': 0,
-        'FIFOB_F1_SID_LOWER': 0,
-        'FIFOB_F1_SID_UPPER': 0,
-        'FIFOB_F2_EN': 0,
-        'FIFOB_F2_MODE': 0,
-        'FIFOB_F2_SID_LOWER': 0,
-        'FIFOB_F2_SID_UPPER': 0,
-        'FIFOB_F3_EN': 0,
-        'FIFOB_F3_MODE': 0,
-        'FIFOB_F3_SID_LOWER': 0,
-        'FIFOB_F3_SID_UPPER': 0,
-        'RxMsgBufs': [  # Receive frames configuration
-            {
-                'FrameId': 2,  # The slot id we are listening on
-                'Channels': 1,  # The channel we are listening on
-                'CCF_EN': 0,  # Cycle counter filter enabled
-                'CCF_VAL': 0,  # Cycle counter filter value
-                'CCF_MASK': 0,  # Cycle counter filter mask
-            },
-        ],
-        'TxMsgBufs': [  # Transmit frames configuration
-            {
-                'FrameId': 1,  # The id of the slot which frame will be send on
-                'PayloadLenMax': 8,  # Max payload length in words, for dynamic slot and DynPayloadLen=1 only
-                'Channels': 1,  # The channel which frame will be send to
-                'CCF_EN': 0,  # Cycle counter filter enabled
-                'CCF_VAL': 0,  # Cycle counter filter value
-                'CCF_MASK': 0,  # Cycle counter filter mask
-                'DynPayloadLen': 0,  # Dynamic payload length enabled, for dynamic slot only
-                'PPI': 0,  # Payload preempt flag
-            },
-        ]
-    }
-
     d = decode_flexray_config()
     for k in d.keys():
         print(k, d[k])
-
-    print(d.keys() - default_fr_config.keys())
-    print(default_fr_config.keys() - d.keys())
-    if set(d.keys()) != set(default_fr_config.keys()):
-        print("Invalid")
+    with open('./audi_a4_b9.yml', 'w') as outfile:
+        yaml.dump(d, outfile)
